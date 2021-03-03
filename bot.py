@@ -8,6 +8,7 @@ from asyncio import sleep
 import typing
 from discord import User, errors
 import time
+import random
 #import utils.json
 #from utils.document import document
 
@@ -23,11 +24,13 @@ async def status():
     await client.wait_until_ready()
     await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name = f"{len(client.guilds)} servers"))
     await sleep(10)
-    await client.change_presence(status=discord.Status.online, activity=discord.Game(name="https://discord.gg/tTfK7XDXTv", type=3))
+    await client.change_presence(activity=discord.Game(name="https://discord.gg/tTfK7XDXTv", type=3))
     await sleep(10)
-    await client.change_presence(status=discord.Status.online, activity=discord.Game(name="Type -help for a list of commands!", type=3))
+    await client.change_presence(activity=discord.Game(name="Type -help for a list of commands!", type=3))
     await sleep(10)
-    await client.change_presence(status=discord.Status.online, activity=discord.Game(name="Version 1.0.4", type=3))
+    await client.change_presence(activity=discord.Game(name="Version 1.0.4", type=3))
+    await sleep(10)
+    await client.change_presence(activity=discord.Game(name="help sampilot kept me in his basement :d", type=3))
     await sleep(10)
 
 @client.event
@@ -36,17 +39,39 @@ async def on_ready():
   client.loop.create_task(status())
 
 @client.command()
+async def winnerchoose(ctx):
+  randomMember = random.choice(guild.members)
+  await ctx.send(f'{randomMember.mention} is the winner!')
+
+
+
+@client.command()
+async def idle(ctx):
+    await ctx.channel.purge(limit=1)
+    time.sleep(3)
+    await client.change_presence(status=discord.Status.idle)
+
+@client.command()
 async def testwarn(ctx, member : discord.Member, *, reason=None):
     embed=discord.Embed(title="testWarn", description=f"{member} has been testwarned by TheFish_YouTube**#9537** for {reason} \n\nWarning **1**.")
   
     await ctx.send(embed=embed)
 
+
 @client.command()
-async def ping(ctx):
+async def pingv(ctx):
   await ctx.send('Pong!')
 
 @client.command()
 async def kick(ctx, member : discord.Member, *, reason=None):
+  if not member:
+    embed = discord.Embed(colour=0xff0000, timestamp=ctx.message.created_at)
+    embed.add_field(name="Error loading command:\n\nCould not find Member.\nPlease specify a valid user!")
+    ctx.send(embed=embed)
+    return
+    
+    
+    
   await ctx.channel.purge(limit=1)
   await member.kick(reason=reason)
 
@@ -54,7 +79,7 @@ async def kick(ctx, member : discord.Member, *, reason=None):
 async def ban(ctx, member : discord.Member, *, reason=None):
   await ctx.channel.purge(limit=1)
   await member.ban(reason=reason)
-  await ctx.send(f"{member} banned.")
+  await ctx.send(f"User {member} has been banned.")
 
 @client.command()
 async def unban(ctx, *, member):
@@ -69,33 +94,9 @@ async def unban(ctx, *, member):
             await ctx.guild.unban(user)
             await ctx.send(f'Unbanned {user.name}#{user.discriminator}!')
 
-            # Auto-log Settings (Edit for each command)
-            Command_Type = "[S] Staff"
-            Command_Name = "-unban [Member] [Reason]"
-            Command_Usage = f"Unbanned {user.name}#{user.discriminator}"
-            Command_Sent = f"{ctx.channel.name}"
-  
-            BotLogEmbed = discord.Embed(
-    
-              title = f"Auto-Generated Command Log: {Command_Name}",
-              colour = ctx.author.color
-  
-            )
-            BotLogEmbed.add_field(name = f"Member Name:",value = f"`{ctx.author.name}`", inline = False)
-            BotLogEmbed.add_field(name = f"User ID:",value = f"`{ctx.author.id}`", inline = False)
-            BotLogEmbed.add_field(name = f"Type:",value = f"`{Command_Type}`", inline = False)
-            BotLogEmbed.add_field(name = f"Command:",value = f"`{Command_Name}`", inline = False)
-            BotLogEmbed.add_field(name = f"Msg ID:",value = f"`{ctx.message.id}`", inline = False)
-            BotLogEmbed.add_field(name = f"Usage:",value = f"`{Command_Usage}`", inline = False)
-            BotLogEmbed.add_field(name = f"Sent:",value = f"`{Command_Sent}`", inline = False)
-            BotLogEmbed.add_field(name = f"Channel:",value = f"`{ctx.channel.name}`", inline = False)
-            BotLogEmbed.add_field(name = f"Server:",value = f"`{ctx.guild.name}`", inline = False)
-            BotLogEmbed.add_field(name = f"Date & Time:",value = f"`{ctx.message.created_at}`", inline = False)
-  
-            BotLogsChannel1 = client.get_channel(798181003888820224)
-            await BotLogsChannel1.send(embed = BotLogEmbed)
-
-            return
+@client.command()
+async def checkstatus(ctx, member):
+    await ctx.send(f"{member} is {member.status}.")
 
 @client.command(aliases=['cmds'])
 async def help(ctx):
@@ -114,9 +115,9 @@ async def help(ctx):
     
 
 
-    embed.add_field(name=f'-helpcommands', value='Bot direct messages you the commands list', inline=False)
-    embed.add_field(name=f'-clear', value='Clears the amount of messages as said.', inline=True)
-    embed.add_field(name=f'-unban', value='Unbans the member specified. Must included discriminator. (ex: idk#0000)', inline=True)
+    embed.add_field(name=f'-help', value='Bot direct messages you the commands list', inline=False)
+    embed.add_field(name=f'-purge', value='Clears the amount of messages as said.', inline=True)
+    embed.add_field(name=f'-unban', value='Unbans the member specified. Must include discriminator. (ex: idk#0000)', inline=True)
     embed.add_field(name=f'-ban', value='Bans the specified member for a specified reason. (if no reason is said, it is auto put as None.)', inline=True)
     embed.add_field(name=f'-sm', value='Bot direct messages you the commands list', inline=True)
     embed.add_field(name=f'-shutdownbot', value='Shutdowns the bot for the specified reason.', inline=True)
@@ -127,7 +128,7 @@ async def help(ctx):
     embed.add_field(name=f'-invite', value='Shows the invite link to the main server/support server. (self promotion! :O)', inline=True)
     embed.add_field(name=f'-testban', value='Tests if the ban command works or not. (I recommend to test it on an alt or different before banning.)', inline=True)
     embed.add_field(name=f'-tban', value='tempbans the specified user for the specified reason. (if no reason is said, it is auto put as None.)', inline=True)
-    embed.add_field(name=f'-ping', value='Tests the bot to see if the bot works and is online.', inline=True)
+    embed.add_field(name=f'-pingv', value='Tests the bot to see if the bot works and is online.', inline=True)
     embed.add_field(name=f'-prefix', value='Shows the prefix of the bots commands.', inline=True)
 
     await ctx.author.send(embed = embed)
@@ -161,6 +162,14 @@ async def prefix(ctx):
     await ctx.author.send(embed = embed)
 
 @client.command()
+async def addrole(ctx, member : discord.Member, role : discord.Role):
+    await member.add_roles(role)
+
+@client.command()
+async def createrole(ctx, name="new role"):
+  await client.create_role(author.server, colour=discord.Colour(0x0000ff), name=f"{name}", permissions=discord.Permissions(permissions=8))
+
+@client.command()
 async def pong(ctx):
   await ctx.send('Ping!')
 
@@ -173,40 +182,43 @@ async def tban(ctx, user:discord.User, duration: int):
 @client.command()
 async def testban(ctx, member : discord.Member, *, reason=('Spam')):
   await ctx.channel.purge(limit=1)
-  await ctx.send(f"User {member} was test banned.")
+  await ctx.send(f"User {member} has been test banned.")
 
 @client.command()
 async def version(ctx):
-  await ctx.send('Value is on version 1.0.5, coded with discord.py.\nType `-whatsnew` for more info.')
+  await ctx.send('Value is on version 1.0.5. Type `-whatsnew` for more info.')
+
+@client.command()
+async def ajhbwakdagwkj(ctx):
+  await ctx.send('__**Values Support**__\nWant to play games, and use custom bots?\n           Then this is the place for you!\n\n__**We have:**__\n\n:robot: Custom bots.\n:video_game: Gaming.\n:video_camera: Voice chatting.\n\nSupport server: https://discord.gg/tTfK7XDXTv\nMain Server: https://discord.gg/zaGv6RBAFV\n\nWe hope you have a fantastic day!')
 
 @client.command()
 async def sm(ctx, seconds: int):
     await ctx.channel.purge(limit=1)
     await ctx.channel.edit(slowmode_delay=seconds)
-    await ctx.send(f"Set the slowmode delay in this channel to {seconds} seconds!")
+    await ctx.send(f"I have set the slowmode to {seconds} second(s)!")
+
+@client.command()
+async def happybirthday(ctx, member : discord.Member):
+   await ctx.send(f'Happy birthday {member}! :partying_face: :birthday:')
 
 @client.command()
 async def hello(ctx):
   await ctx.send("Hello!")
 
 @client.command()
-async def clear(ctx, amount=5):
+async def purge(ctx, amount=5):
     await ctx.channel.purge(limit=1)
     await ctx.channel.purge(limit=amount)
 
 @client.command()
 async def whatsnew(ctx):
-  await ctx.send('Version 1.0.5 new hotfix!\nImproved bot sometimes going offline\nBug where unban would not work\n`Version 1.0.5, 1.20.2021`')
-
-@client.command()
-async def update(ctx):
-  await ctx.channel.purge(limit=1)
-  await ctx.send('Updated to version 1.0.5 succesfully.')
+  await ctx.send('There is no new updates yet.\nCheck back on Wednesday for possibly new updates!')
   
 @client.command()
 async def invite(ctx):
  await ctx.channel.purge(limit=1)
- await ctx.send('Support Server: https://discord.gg/tTfK7XDXTv')
+ await ctx.send('__**Values Support**__\nWant to play games, and use custom bots?n\           Then this is the place for you!\n\n__**We have:**__\n\n:robot: Custom bots.\n:video_game: Gaming.\n:video_camera: Voice chatting.\n\nSupport server: https://discord.gg/tTfK7XDXTv\nMain Server: https://discord.gg/zaGv6RBAFV\n\nWe hope you have a fantastic day!')
 
 @client.command(aliases=['info'])
 async def userinfo(ctx, *, member: discord.Member = None):
@@ -234,7 +246,23 @@ async def userinfo(ctx, *, member: discord.Member = None):
 
     await ctx.send(embed=embed)
 
-@client.command(aliases=['shutdown'])
+@client.command()
+async def serverinfo(ctx):
+    
+    
+    embed = discord.Embed(title = "Server Info", description = 'Some stats about the server', colour = discord.Colour.blue())
+    embed.add_field(name = "Region", value = f"{ctx.guild.region}", inline = False )
+    embed.add_field(name = "Members", value = f"{ctx.guild.member_count}", inline = False )
+    embed.add_field(name = "Created  At", value = f"{ctx.guild.created_at}", inline = False )
+    embed.add_field(name = "Boost Level", value = f"{ctx.guild.premium_tier}", inline = False )
+    embed.add_field(name = "Total Boosts", value = f"{ctx.guild.premium_subscription_count}", inline = False )
+    embed.add_field(name = "Roles", value = f"{len(ctx.guild.roles)}", inline = False )
+    embed.set_image(url = f"{ctx.guild.icon_url}")
+    embed.add_field(name="Number of channels:", value=len(ctx.guild.channels), inline=False)
+    embed.set_footer(icon_url = f"{ctx.guild.icon_url}", text = f"Guild ID: {ctx.guild.id}")
+    await ctx.send(embed = embed)
+
+@client.command(aliases=['shutdown', 'sd'])
 @commands.is_owner()
 async def shutdownbot(ctx, *, reason = "N/A"):
     deleted = await ctx.message.channel.purge(limit=1)
@@ -258,10 +286,10 @@ async def shutdownbot(ctx, *, reason = "N/A"):
 
 @client.command(aliases=['Echo','e','E'])
 async def echo(ctx, *, message):
-  deleted = await ctx.message.channel.purge(limit=1)
-  await ctx.message.channel.send(f'{message}')
+  channel = client.get_channel(802168752292364310)
+  await ctx.channel.purge(limit=1)
+  await channel.send(f'{message}')
 
-  
 
 
 client.run(os.getenv("DISCORD_TOKEN"))
